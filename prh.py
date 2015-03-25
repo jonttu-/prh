@@ -5,30 +5,28 @@ from pymongo import MongoClient
 
 def main():
   client = MongoClient()
-  db = client.mydb
-  companies_table = db.companies
-  this_day = date.today() - timedelta(1)
-  companies_url = "http://avoindata.prh.fi/tr/tv"
-  company_base_url = "http://avoindata.prh.fi/tr/v1/"
-  parameters = {'companyRegistrationFrom':this_day.isoformat()}
-  r = requests.get(companies_url, params=parameters)
-  results = r.json()['results']
-  for business in results:
-    business_id = business['businessId']
-    company_url = company_base_url + business_id
-    r = requests.get(company_url)
+  companies_table = client.mydb.companies
+  last_day = date.today() - timedelta(1)
+  parameters = {'companyRegistrationFrom':last_day.isoformat()}
+  r = requests.get("http://avoindata.prh.fi/tr/tv", params=parameters)
+  for result in r.json()['results']:
+    business_id = result['businessId']
+    existing = companies_table.find({'business_id':business_id})
+    if existing.count() != 0:
+    	print "business id exists, skipping: "+business_id
+    	continue
+    r = requests.get("http://avoindata.prh.fi/tr/v1/"+business_id)
     business_info = r.json()['results'][0]
     address = business_info['addresses'][0]
-    contact_info = dict(businessId=business_id, 
+    contact_info = dict(business_id=business_id, 
     	               name=business_info['name'], 
     	               street=address['street'],
-    	               postCode=address['postCode'],
+    	               post_code=address['postCode'],
     	               city=address['city'],
     	               website=address['website']
     	               )
     db_id = companies_table.insert(contact_info)
-
-    print db_id
+    print 'added company with business id '+business_id
 
 if __name__ == "__main__":
     main()

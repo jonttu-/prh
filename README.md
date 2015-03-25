@@ -4,5 +4,7 @@ Prerequisites:
 - Python 2.7x
 - Python modules: requests, json, datetime, pymongo
 - MongoDB installed
+
+Recommendations:
 - (database created in MongoDB, not really required but recommended)
 - MongoDB config edited to suit your needs (db name, collection name etc.)
